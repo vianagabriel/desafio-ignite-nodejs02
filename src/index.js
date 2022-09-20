@@ -8,21 +8,73 @@ app.use(express.json());
 app.use(cors());
 
 const users = [];
-
+// middleware feito
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find(user => user.username === username);
+
+  if (!user) {
+    return response.status(404).json({ error: 'User does not exits' })
+  }
+
+  request.user = user;
+
+  return next();
 }
 
+// middleware feito
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+   const { user } = request;
+
+   if(user.pro ){
+      return next();
+   }else if(!user.pro && user.todos.length   < 10){
+      return next();
+   }
+
+   return response.status(403).json({ error: 'You already have ten todos created. Please chance to Pro Plan!'});
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+   const { username } = request.headers;
+   const { id: idTodo } = request.params;
+
+   const user = users.find(user => user.username === username);
+
+   if(!user){
+     return response.status(404).json({ error: 'User does found'});
+   }
+
+   if(!validate(idTodo)){
+     return response.status(400).json({ error: 'Todo ID is incorrect.'});
+   }
+
+   const userTodo = user.todos.find(todo => todo.id === idTodo);
+
+   if(!userTodo) {
+     return response.status(404).json({ error: 'Todo does found.'})
+   }
+
+   request.todo = userTodo;
+   request.user = user;
+
+   return next();
 }
 
+// middleware feito
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  const user = users.find(user => user.id === id);
+
+  if (!user) {
+    return response.status(404).json({ error: 'User does not exits' })
+
+  }
+
+  request.user = user;
+
+  return next();
+
 }
 
 app.post('/users', (request, response) => {
@@ -128,3 +180,5 @@ module.exports = {
   checksTodoExists,
   findUserById
 };
+
+
